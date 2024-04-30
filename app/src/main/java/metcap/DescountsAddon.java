@@ -3,6 +3,8 @@
  */
 package metcap;
 import java.math.BigDecimal;
+
+import org.apache.fop.pdf.StandardStructureTypes.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sap.scco.ap.plugin.BasePlugin;
@@ -62,6 +64,7 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
                                                                 
                                                                 salesItem.setDiscountManuallyChanged(true);
 
+                                                                // true - avoid  CCO to automatically calculate native discounts!
                                                                 salesItem.setDiscountManuallyChanged(true);
                                                                 salesItem.setMarkChanged(true);
                                                                 salesItem.setItemDiscountChanged(true);
@@ -75,7 +78,9 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
                                                                 // salesItem.setMarkChanged(true);
                                                 }
  
-                                                // Refresh the receipt to recalculate line and receipt totals
+                                                // Use calculationPosService to recalculate transaction
+                                                calculationPosService.calculate(receipt, EntityActions.CHECK_CONS);
+
                                                 UIEventDispatcher.INSTANCE.dispatchAction(CConst.UIEventsIds.RECEIPT_REFRESH, null, receipt);
  
                                                 logger.info("Discount calculation and receipt refresh successful.");
