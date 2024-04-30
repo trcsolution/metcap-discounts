@@ -1,0 +1,51 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Addon",
+			"type": "shell",
+  			"command": "echo Compiled",
+  			"dependsOrder": "sequence",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"dependsOn": ["gradle: build"]
+			// "dependsOn": ["gradle: build","copyJarFile"]
+		  },
+		{
+			"type": "gradle",
+			"id": "C:\\Users\\achab\\work\\CCO\\metcapbuildmetcap",
+			"script": "build",
+			"description": "Assembles and tests this project.",
+			"group": "build",
+			"project": "metcap",
+			"buildFile": "C:\\Users\\achab\\work\\CCO\\metcap-coupons\\build.gradle",
+			"rootProject": "metcap",
+			"projectFolder": "C:\\Users\\achab\\work\\CCO\\metcap-coupons",
+			"workspaceFolder": "C:\\Users\\achab\\work\\CCO\\metcap-coupons",
+			"args": "",
+			"javaDebug": false,
+			"problemMatcher": [
+				"$gradle"
+			],
+			"label": "gradle: build"
+		}
+		// ,
+		// {
+			
+		// 	"type": "shell",
+		// 	"label": "copyJarFile",
+		// 	"runOptions": {},
+		// 	"command": "cp",
+		// 	"options": {
+		// 		"cwd": "${workspaceFolder}"
+		// 	},
+		// 	"args": [
+		// 		"-Force",
+		// 		"${workspaceFolder}\\app\\build\\libs\\metcapcoupons-1.0.jar",
+		// 		"C:\\SapCustomerCheckout\\cco\\POSPlugins\\AP"
+		// 	]
+		// }
+	]
+}
