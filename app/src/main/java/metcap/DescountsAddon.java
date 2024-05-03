@@ -22,6 +22,7 @@ import com.sap.scco.ap.pos.service.ReceiptPosService;
 import com.sap.scco.ap.pos.service.component.listener.ReceiptChangeListener;
 import com.sap.scco.env.UIEventDispatcher;
 import com.sap.scco.util.CConst;
+import com.sap.scco.ap.pos.entity.SalesItemNoteEntity;
 
 
 
@@ -131,6 +132,13 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
           if(rslt==null)
            return null;
            return rslt.length()>0?rslt:null;
+    }
+    public static void ClearPromo(SalesItemEntity entry,boolean clearNote)
+    {
+        setAdditionalField(entry, com.trc.ccopromo.models.Constants.PROMO_ID,null);
+        if(clearNote)
+            AddNote(entry,null);
+    
     }
     public static void  AddNote(SalesItemEntity salesItem,String key,String Text)
     {
