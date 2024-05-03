@@ -119,6 +119,18 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
         logger.info(trcPROMOID.getValue());
         
         return null;
+
+    }
+
+    public static String getAdditionalField(SalesItemEntity entry,String fieldName)
+    {
+        var field=entry.getAdditionalField(fieldName);
+        if(field==null)
+          return null;
+          var rslt=field.getValue();
+          if(rslt==null)
+           return null;
+           return rslt.length()>0?rslt:null;
     }
 
 
