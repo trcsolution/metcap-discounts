@@ -8,13 +8,17 @@ import org.apache.fop.pdf.StandardStructureTypes.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sap.scco.ap.plugin.BasePlugin;
+import com.sap.scco.ap.plugin.annotation.PluginAt;
 import com.sap.scco.ap.pos.dao.CDBSession;
 import com.sap.scco.ap.pos.dao.CDBSessionFactory;
 import com.sap.scco.ap.pos.entity.BaseEntity.EntityActions;
+import com.sap.scco.ap.pos.entity.BusinessPartnerEntity;
+import com.sap.scco.ap.pos.entity.ReceiptEntity;
 import com.sap.scco.ap.pos.entity.SalesItemEntity;
 import com.sap.scco.ap.pos.service.ServiceFactory;
 import com.sap.scco.ap.pos.service.CalculationPosService;
 import com.sap.scco.ap.pos.service.ReceiptChangeNotifierPosService;
+import com.sap.scco.ap.pos.service.ReceiptPosService;
 import com.sap.scco.ap.pos.service.component.listener.ReceiptChangeListener;
 import com.sap.scco.env.UIEventDispatcher;
 import com.sap.scco.util.CConst;
@@ -57,26 +61,19 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
         //This function clear tax items for the sales item
           try {
                                                 // Update the discount for each sales item
-                                                List<SalesItemEntity> salesItems = receipt.getSalesItems();
-                                                for (SalesItemEntity salesItem : salesItems) {
-                                                                salesItem.setDiscountNetAmount(new BigDecimal(2.00));
-                                                                salesItem.setPaymentNetAmount(new BigDecimal(19.99));
+                                                // List<SalesItemEntity> salesItems = receipt.getSalesItems();
+                                                // for (SalesItemEntity salesItem : salesItems) {
+                                                //                 salesItem.setDiscountNetAmount(new BigDecimal(2.00));
+                                                //                 salesItem.setPaymentNetAmount(new BigDecimal(19.99));
                                                                 
-                                                                salesItem.setDiscountManuallyChanged(true);
+                                                //                 salesItem.setDiscountManuallyChanged(true);
 
-                                                                // true - avoid  CCO to automatically calculate native discounts!
-                                                                salesItem.setDiscountManuallyChanged(true);
-                                                                salesItem.setMarkChanged(true);
-                                                                salesItem.setItemDiscountChanged(true);
+                                                //                 // true - avoid  CCO to automatically calculate native discounts!
+                                                //                 salesItem.setDiscountManuallyChanged(true);
+                                                //                 salesItem.setMarkChanged(true);
+                                                //                 salesItem.setItemDiscountChanged(true);
 
-
-                                                                // salesItem.setItemDiscountChanged(true);
-                                                                // salesItem.setItemDiscountAlreadyFetched(false);
-                                                                // salesItem.setPercentageDiscount(false);
-                                                                // salesItem.setDiscountAmount(new BigDecimal(2.00));
-                                                                // salesItem.setDiscountManuallyChanged(false);
-                                                                // salesItem.setMarkChanged(true);
-                                                }
+                                                // }
  
                                                 // Use calculationPosService to recalculate transaction
                                                 calculationPosService.calculate(receipt, EntityActions.CHECK_CONS);
@@ -100,6 +97,28 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
     public void onSalesItemUpdated(com.sap.scco.ap.pos.dao.CDBSession dbSession, com.sap.scco.ap.pos.entity.ReceiptEntity receipt, com.sap.scco.ap.pos.entity.SalesItemEntity newSalesItem, java.math.BigDecimal quantity) {
         ApplyDiscount(receipt);
 
+    }
+
+    //this is happened when changing customer for transaction
+    @PluginAt(pluginClass = ReceiptPosService.class, method = "setBusinessPartner", where = PluginAt.POSITION.AFTER)
+    public Object setBusinessPartner(Object proxy, Object[] args, Object ret, StackTraceElement caller)
+    {
+        //this is our db session
+        var dbSession =((ReceiptPosService)proxy);
+       // this is our receipt
+        var receipt=(ReceiptEntity)args[0];
+
+        //this is customer for the transaction
+        var customer=(BusinessPartnerEntity)args[1];
+        //this group code
+        var customergroup=customer.getCustomerGroupCode();
+        
+        //here we are checking is trcpromo now!!!! 
+        var trcPROMOID=receipt.getSalesItems().get(0).getAdditionalField("PromoId");
+        if(trcPROMOID!=null)
+        logger.info(trcPROMOID.getValue());
+        
+        return null;
     }
 
 
