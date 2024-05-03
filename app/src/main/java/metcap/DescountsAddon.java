@@ -132,6 +132,36 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
            return null;
            return rslt.length()>0?rslt:null;
     }
+    public static void  AddNote(SalesItemEntity salesItem,String key,String Text)
+    {
+        if(salesItem.getNotes()!=null)
+            if(salesItem.getNotes().stream().anyMatch(a->a.getKey()==key))
+        {
+            salesItem.getNotes().stream().filter(a->a.getKey()==key).findFirst().get().setText(Text);
+            salesItem.setNotes(salesItem.getNotes());
+            return;
+            
+        }
+        // else
+        {
+            salesItem.setNotes(null);
+            if(Text==null)
+            {
+                // salesItem.setNotes(null);
+                return;
+            }
+            // UUID uuid = UUID.randomUUID();
+            SalesItemNoteEntity entity=new SalesItemNoteEntity();
+            entity.setText(Text);
+            entity.setKey(key);
+            salesItem.addNote(entity);
+            salesItem.setNotes(
+                salesItem.getNotes()
+                );
+        }
+        
+    }
+    
 
 
 
