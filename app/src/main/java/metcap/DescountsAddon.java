@@ -139,7 +139,13 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
         if(clearNote)
             AddNote(entry,null);
     
+
     }
+    protected void MarkAsPromo(SalesItemEntity salesItem,String PromoId)
+        {
+            Misc.setAdditionalField(salesItem,com.trc.ccopromo.models.Constants.PROMO_ID,PromoId);
+        }
+        
     public static void  AddNote(SalesItemEntity salesItem,String key,String Text)
     {
         if(salesItem.getNotes()!=null)
