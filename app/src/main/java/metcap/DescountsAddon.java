@@ -23,6 +23,7 @@ import com.sap.scco.ap.pos.service.component.listener.ReceiptChangeListener;
 import com.sap.scco.env.UIEventDispatcher;
 import com.sap.scco.util.CConst;
 import com.sap.scco.ap.pos.entity.SalesItemNoteEntity;
+import com.sap.scco.ap.pos.entity.AdditionalFieldEntity;
 
 
 
@@ -142,10 +143,26 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
 
     }
     protected void MarkAsPromo(SalesItemEntity salesItem,String PromoId)
-        {
-            Misc.setAdditionalField(salesItem,com.trc.ccopromo.models.Constants.PROMO_ID,PromoId);
+    {
+            setAdditionalField(salesItem,com.trc.ccopromo.models.Constants.PROMO_ID,PromoId);
+    }
+    
+        public static void setAdditionalField(SalesItemEntity salesItem, String key, String value) {
+            AdditionalFieldEntity additionalField2 = salesItem.getAdditionalField(key);
+            if (additionalField2 == null) {
+                if (value == null)
+                    return;
+                additionalField2 = new AdditionalFieldEntity();
+                salesItem.addAdditionalField(additionalField2);
+            }
+            additionalField2.setFieldName(key);
+            additionalField2.setGroupName(com.trc.ccopromo.models.Constants.PROMO_GROUP);
+            if(value==null)
+            additionalField2.setValue("");
+                else
+            additionalField2.setValue(value);
         }
-        
+
     public static void  AddNote(SalesItemEntity salesItem,String key,String Text)
     {
         if(salesItem.getNotes()!=null)
