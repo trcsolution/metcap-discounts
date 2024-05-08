@@ -135,9 +135,9 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
         salesItem.setPercentageDiscount(false);
                             
                                 // use this for your US tax System
-                            // salesItem.setDiscountNetAmount(discount);
+                            salesItem.setDiscountNetAmount(discount);
                                 // this is for VAT
-                            salesItem.setDiscountAmount(discount);
+                            // salesItem.setDiscountAmount(discount);
 
                             salesItem.setDiscountManuallyChanged(true);
                             salesItem.setMarkChanged(true);
