@@ -30,7 +30,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass.set("metcap.CouponsAddon")
+    mainClass.set("metcap.DescountsAddon")
 }
 
 tasks.named<Test>("test") {
@@ -43,7 +43,7 @@ tasks.jar {
         archiveFileName.set("metcapcoupons-1.0.jar")
         attributes(
             "pluginName" to "metcap",
-            "cashdeskPOSPlugin" to "metcap.CouponsAddon",
+            "cashdeskPOSPlugin" to "metcap.DescountsAddon",
             "cashDeskVersions" to "2.0 FP12, 2.0 FP13, 2.0 FP14, 2.0 FP15, 2.0 FP16, 2.0 FP17,2.0 FP18, n/a",
             "version" to "2.14.0",
             "pluginVersion" to "2.14.0"
