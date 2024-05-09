@@ -9,6 +9,7 @@
             "name": "Attach to Remote Program",
             "request": "attach",
             "hostName": "localhost",
+            "projectName": "metcap",
             "port": "4000"
         }
     ]

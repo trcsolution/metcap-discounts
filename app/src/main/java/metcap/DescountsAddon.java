@@ -11,6 +11,7 @@ import java.util.Set;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.events.Event;
 
+import com.sap.scco.ap.configuration.ConfigurationHelper;
 import com.sap.scco.ap.plugin.BasePlugin;
 //import com.sap.scco.ap.plugin.annotation.ListenToExit;
 import com.sap.scco.ap.pos.dao.CDBSession;
@@ -22,6 +23,7 @@ import com.sap.scco.ap.pos.entity.ReceiptEntity;
 //import com.sap.scco.ap.pos.dto.ReceiptPrintDTO;
 import com.sap.scco.ap.pos.entity.SalesItemEntity;
 import com.sap.scco.ap.pos.entity.SalesItemTaxItemEntity;
+import com.sap.scco.ap.pos.entity.TaxationMethod;
 import com.sap.scco.ap.pos.entity.UserEntity;
 import com.sap.scco.ap.pos.entity.coupon.AccountCouponEntity;
 import com.sap.scco.ap.pos.entity.coupon.CouponAssignmentEntity;
@@ -50,6 +52,7 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
     private CalculationPosService calculationPosService;
     private CDBSession dbSession;
     protected ReceiptManager receiptManager;
+    private  boolean isUSTaxSystem=false;
 
     @Override
     public String getId() {
@@ -87,6 +90,7 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
                 this.dbSession);
         notifierService.registerChangeListener(this);
         this.receiptManager = new ReceiptManager(this.dbSession);
+        isUSTaxSystem=ConfigurationHelper.INSTANCE.getCashDesk().getTaxSettings().getTaxationMethod().getCode()==TaxationMethod.TAX_JURISDICTION_BASED.getCode();
 
         super.startup();
     }
@@ -107,37 +111,42 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
         CalculateDiscount(dbSession,receipt);
     }
 
-    // public void onSalesItemVoided(com.sap.scco.ap.pos.dao.CDBSession dbSession,
-    //         com.sap.scco.ap.pos.entity.ReceiptEntity receipt, com.sap.scco.ap.pos.entity.SalesItemEntity newSalesItem) {
-    //     // CalculateDiscount(receipt);
-    //     List<SalesItemEntity> salesItems = receipt.getSalesItems();
-    //     for (SalesItemEntity sales : salesItems) {
-    //         if (sales.getStatus().equals("1") && 
-    //         (sales.getId().equals("075188")
-    //         || sales.getId().equals("528082"))
-    //         ) {
-    //             sales.setPercentageDiscount(false);
+    public void onSalesItemVoided(com.sap.scco.ap.pos.dao.CDBSession dbSession,
+            com.sap.scco.ap.pos.entity.ReceiptEntity receipt, com.sap.scco.ap.pos.entity.SalesItemEntity newSalesItem) {
+        CalculateDiscount(dbSession,receipt);
+        // CalculateDiscount(receipt);
+        // List<SalesItemEntity> salesItems = receipt.getSalesItems();
+        // for (SalesItemEntity sales : salesItems) {
+        //     if (sales.getStatus().equals("1") && 
+        //     (sales.getId().equals("075188")
+        //     || sales.getId().equals("528082")
+        //     )
+        //     ) {
+        //         CalculateDiscount(dbSession,receipt);
+        //         // sales.setPercentageDiscount(false);
                 
-    //             sales.setDiscountNetAmount(BigDecimal.valueOf(10.00));
-    //             sales.setDiscountManuallyChanged(true);
-    //             sales.setMarkChanged(true);
-    //             sales.setItemDiscountChanged(true);
-    //         }
-    //         calculationPosService.calculate(receipt, EntityActions.CHECK_CONS);
+        //         // sales.setDiscountNetAmount(BigDecimal.valueOf(10.00));
+        //         // sales.setDiscountManuallyChanged(true);
+        //         // sales.setMarkChanged(true);
+        //         // sales.setItemDiscountChanged(true);
+        //     }
+        //     // calculationPosService.calculate(receipt, EntityActions.CHECK_CONS);
 
-    //         UIEventDispatcher.INSTANCE.dispatchAction(CConst.UIEventsIds.RECEIPT_REFRESH, null, receipt);
+        //     // UIEventDispatcher.INSTANCE.dispatchAction(CConst.UIEventsIds.RECEIPT_REFRESH, null, receipt);
 
-    //     }
-    // }
+        // }
+    }
 
     void setLineDiscount(SalesItemEntity salesItem,BigDecimal discount)
     {
         salesItem.setPercentageDiscount(false);
                             
                                 // use this for your US tax System
-                            salesItem.setDiscountNetAmount(discount);
+                                if(isUSTaxSystem)
+                                    salesItem.setDiscountNetAmount(discount);
                                 // this is for VAT
-                            // salesItem.setDiscountAmount(discount);
+                                else
+                                    salesItem.setDiscountAmount(discount);
 
                             salesItem.setDiscountManuallyChanged(true);
                             salesItem.setMarkChanged(true);
@@ -153,21 +162,23 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
             // this.dbSession=dbsession;
             // Update the discount for each sales item
             List<SalesItemEntity> salesItems = receipt.getSalesItems();
+            var hasDeleted=salesItems.stream().anyMatch(a->a.getStatus()!="1");
             
             for (SalesItemEntity salesItem : salesItems) {
+                if (salesItem.getStatus().equals("1")) {
                 
 
                 if ((salesItem.getId().equals("074721") || salesItem.getId().equals("075188"))
                         || salesItem.getId().equals("528082")) {
 
-
+                    
                             
 
-                    if (salesItem.getStatus().equals("1")) {
+                    
 
                         int qty = salesItem.getQuantity().intValue();
 
-                        double discountNetAmount = 5.00; // BigDecimal.valueOf(9.99);
+                        double discountNetAmount = hasDeleted?3.00:5.00; // BigDecimal.valueOf(9.99);
                         discountNetAmount = discountNetAmount * qty;
 
                         logger.info("Calculating Discount..." + discountNetAmount);
