@@ -13,6 +13,7 @@ import org.w3c.dom.events.Event;
 
 import com.sap.scco.ap.configuration.ConfigurationHelper;
 import com.sap.scco.ap.plugin.BasePlugin;
+import com.sap.scco.ap.plugin.annotation.PluginAt;
 //import com.sap.scco.ap.plugin.annotation.ListenToExit;
 import com.sap.scco.ap.pos.dao.CDBSession;
 import com.sap.scco.ap.pos.dao.CDBSessionFactory;
@@ -30,6 +31,8 @@ import com.sap.scco.ap.pos.entity.coupon.CouponAssignmentEntity;
 import com.sap.scco.ap.pos.service.CalculationPosService;
 //import com.sap.scco.ap.pos.entity.coupon.CouponAssignmentEntity;
 import com.sap.scco.ap.pos.service.ReceiptChangeNotifierPosService;
+import com.sap.scco.ap.pos.service.ReceiptPosService;
+import com.sap.scco.ap.pos.service.SalesItemNotePosService;
 import com.sap.scco.ap.pos.service.ServiceFactory;
 import com.sap.scco.ap.pos.service.CalculationPosService;
 import com.sap.scco.ap.pos.service.ReceiptChangeNotifierPosService;
@@ -112,29 +115,41 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
     }
 
     public void onSalesItemVoided(com.sap.scco.ap.pos.dao.CDBSession dbSession,
-            com.sap.scco.ap.pos.entity.ReceiptEntity receipt, com.sap.scco.ap.pos.entity.SalesItemEntity newSalesItem) {
-        CalculateDiscount(dbSession,receipt);
-        // CalculateDiscount(receipt);
-        // List<SalesItemEntity> salesItems = receipt.getSalesItems();
-        // for (SalesItemEntity sales : salesItems) {
-        //     if (sales.getStatus().equals("1") && 
-        //     (sales.getId().equals("075188")
-        //     || sales.getId().equals("528082")
-        //     )
-        //     ) {
-        //         CalculateDiscount(dbSession,receipt);
-        //         // sales.setPercentageDiscount(false);
+            com.sap.scco.ap.pos.entity.ReceiptEntity receipt, com.sap.scco.ap.pos.entity.SalesItemEntity salesItem) {
+
+                CalculateDiscount(dbSession,receipt);
+                this.receiptManager = new ReceiptManager(this.dbSession);
+            receiptManager.update(receipt);
+
+
+                // salesItem.setNotes(null);
                 
-        //         // sales.setDiscountNetAmount(BigDecimal.valueOf(10.00));
-        //         // sales.setDiscountManuallyChanged(true);
-        //         // sales.setMarkChanged(true);
-        //         // sales.setItemDiscountChanged(true);
-        //     }
-        //     // calculationPosService.calculate(receipt, EntityActions.CHECK_CONS);
+                // salesItem.setPercentageDiscount(false);
 
-        //     // UIEventDispatcher.INSTANCE.dispatchAction(CConst.UIEventsIds.RECEIPT_REFRESH, null, receipt);
 
-        // }
+                // // SetLineDiscount(salesItem, BigDecimal.ZERO);
+                // salesItem.setDiscountAmount(BigDecimal.ZERO);
+
+
+                // salesItem.setMarkChanged(true);
+                // salesItem.setItemDiscountChanged(true);
+
+                // salesItem.setDiscountManuallyChanged(false);
+
+
+        
+                // // Calculate(receipt);
+                // CalculateDiscount(dbSession,receipt);
+                
+                // var calculationPosService = ServiceFactory.INSTANCE.getOrCreateServiceInstance(CalculationPosService.class,this.dbSession);
+                //     calculationPosService.calculate(receipt, EntityActions.CHECK_CONS);
+                // receiptManager.update(receipt);
+
+
+
+
+
+        
     }
 
     void setLineDiscount(SalesItemEntity salesItem,BigDecimal discount)
@@ -165,7 +180,8 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
             var hasDeleted=salesItems.stream().anyMatch(a->a.getStatus()!="1");
             
             for (SalesItemEntity salesItem : salesItems) {
-                if (salesItem.getStatus().equals("1")) {
+                // if (salesItem.getStatus().equals("1")) 
+                {
                 
 
                 if ((salesItem.getId().equals("074721") || salesItem.getId().equals("075188"))
@@ -178,7 +194,8 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
 
                         int qty = salesItem.getQuantity().intValue();
 
-                        double discountNetAmount = hasDeleted?3.00:5.00; // BigDecimal.valueOf(9.99);
+                        double discountNetAmount = //salesItems.stream().filter(a->a.getStatus()=="1").count();
+                        hasDeleted?3.00:5.00; // BigDecimal.valueOf(9.99);
                         discountNetAmount = discountNetAmount * qty;
 
                         logger.info("Calculating Discount..." + discountNetAmount);
@@ -193,13 +210,14 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
                         
                                 
 
-                    } else {
-                        BigDecimal discountNetAmount = BigDecimal.valueOf(0.00);
-                        setLineDiscount(salesItem,discountNetAmount.abs());
-                        // salesItem.setDiscountNetAmount(discountNetAmount.abs());
-                        logger.info("Calculating Discount...No Discount" + discountNetAmount);
+                    } 
+                    // else {
+                    //     BigDecimal discountNetAmount = BigDecimal.valueOf(0.00);
+                    //     setLineDiscount(salesItem,discountNetAmount.abs());
+                    //     // salesItem.setDiscountNetAmount(discountNetAmount.abs());
+                    //     logger.info("Calculating Discount...No Discount" + discountNetAmount);
 
-                    }
+                    // }
 
                     
                     // // true - avoid CCO to automatically calculate native discounts!
@@ -214,6 +232,7 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
 
             calculationPosService.calculate(receipt, EntityActions.CHECK_CONS);
             this.receiptManager = new ReceiptManager(this.dbSession);
+            // receiptManager.update(receipt);
 
             // calculationPosService.calculate(receipt, EntityActions.CHECK_CONS);
 // 
@@ -222,5 +241,28 @@ public class DescountsAddon extends BasePlugin implements ReceiptChangeListener 
             logger.error("Error occurred while calculating discount and refreshing receipt:", e);
         }
     }
+
+    // @PluginAt(pluginClass = SalesItemNotePosService.class, method = "removeSalesItemNote", where = PluginAt.POSITION.AFTER)
+    // public Object removeSalesItemNote(Object proxy, Object[] args, Object ret, StackTraceElement caller)
+    // {
+    //     ReceiptEntity receipt=(ReceiptEntity)args[0];
+    //     CalculateDiscount(this.dbSession,receipt);
+    //     return  null;
+    // }
+
+    // @PluginAt(pluginClass = ReceiptPosService.class, method = "updateSalesItem", where = PluginAt.POSITION.BEFORE)
+    // public void updateSalesItemBefore(Object proxy, Object[] args, Object ret)
+    // {
+    //     if(args.length>3)
+    //     {
+    //         CalculateDiscount(this.dbSession,(ReceiptEntity)args[0]);
+    //         // SalesController controller=new SalesController(this,((ReceiptPosService)proxy).getDbSession());
+    //         // HashSet hashset=(HashSet)args[3];
+    //         // if(hashset.contains("discountAmount") || hashset.contains("discountPercentage"))
+    //         // if(AvailableForPromo((ReceiptEntity)args[0]))
+    //         //     controller.onManuallyUpdateItemDiscount((ReceiptEntity)args[0],(SalesItemEntity)args[1]);
+     
+    //         }
+    // }
 
 }
